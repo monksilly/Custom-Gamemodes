@@ -279,10 +279,10 @@ public class GameModeController : MonoBehaviour
             // TODO: Support more than one, and modes(slideshow, random)
 
             var capsuleSprite = _assetService.LoadPngAsSprite(
-                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, cfg.capsuleIcon)
+                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, "Assets", cfg.capsuleIcon)
             );
             var screenSprite = _assetService.LoadPngAsSprite(
-                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, cfg.screenIcon)
+                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, "Assets", cfg.screenIcon)
             );
 
             // Load bundle && levels if specified
