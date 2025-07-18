@@ -261,11 +261,17 @@ public class GameModeController : MonoBehaviour
                 LogManager.Error($"[GameModeLoader] Standard Config is missing regions");
                 return;
             }
-
             
+            var assetsFolder = Path.Combine(folderPath, "Assets");
+
+            if (cfg.assetBundleFileName != null && !File.Exists(Path.Combine(assetsFolder, cfg.assetBundleFileName)))
+            {
+                LogManager.Error("[GameModeLoader] Standard Config is missing asset bundle file");
+                return;
+            }
 
 
-            var gmName = cfg.gamemodeName ?? new DirectoryInfo(folderPath).Name;
+            var gmName = cfg.gamemodeName;
 
             var levelPhaseKey = $"Loading Levels for \"{gmName}\"";
             _progressPhases[levelPhaseKey] = 0f;
@@ -277,12 +283,12 @@ public class GameModeController : MonoBehaviour
 
             // Load Icons
             // TODO: Support more than one, and modes(slideshow, random)
-
+            
             var capsuleSprite = _assetService.LoadPngAsSprite(
-                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, "Assets", cfg.capsuleIcon)
+                Path.Combine(assetsFolder, cfg.capsuleIcon)
             );
             var screenSprite = _assetService.LoadPngAsSprite(
-                Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, "Assets", cfg.screenIcon)
+                Path.Combine(assetsFolder, cfg.screenIcon)
             );
 
             // Load bundle && levels if specified
@@ -297,7 +303,7 @@ public class GameModeController : MonoBehaviour
             if (!string.IsNullOrEmpty(cfg.assetBundleFileName))
             {
                 var bundle = await _assetService.LoadBundleRelativeAsync(
-                    Path.Combine(_customRoot, new DirectoryInfo(folderPath).Name, "Assets", cfg.assetBundleFileName),
+                    Path.Combine(assetsFolder, cfg.assetBundleFileName),
                     levelProgress
                 );
                 var allLevelsFromBundle = await _assetService.LoadAllLevelsFromBundle(bundle, levelProgress);
