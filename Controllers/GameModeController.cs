@@ -566,7 +566,7 @@ public class GameModeController : MonoBehaviour
         
         var contentToCopyFrom =
             GameObject.Find(
-                $"{PlayPane}/Tab Objects/Play Pane - Scroll View Tab - Endless/Viewport/Content")?.transform;
+                $"{PlayPane}/Tab Objects/Play Pane - Scroll View Tab - Endless Variant/Viewport/Content")?.transform;
         
         if (contentToCopyFrom is null)
         {
