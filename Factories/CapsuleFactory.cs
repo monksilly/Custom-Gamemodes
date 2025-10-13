@@ -105,7 +105,7 @@ namespace CustomGameModes.Factories
 
                 var contentToCopyFrom =
                     GameObject.Find(
-                        "Canvas - Screens/Screens/Canvas - Screen - Play/Play Menu/Play Pane/Tab Objects/Play Pane - Scroll View Tab - Endless/Viewport/Content")
+                        "Canvas - Screens/Screens/Canvas - Screen - Play/Play Menu/Play Pane/Tab Objects/Play Pane - Scroll View Tab - Endless Variant/Viewport/Content")
                         ?.transform;
                 
                 _template = contentToCopyFrom?.Find("Mode Selection Button - Endless");

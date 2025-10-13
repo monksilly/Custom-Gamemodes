@@ -294,7 +294,7 @@ public class GameModeController : MonoBehaviour
             // Load bundle && levels if specified
             Dictionary<string, M_Level> allLevels = new();
 
-            foreach (var inGameLevel in CL_AssetManager.instance.assetDatabase.levelPrefabs)
+            foreach (var inGameLevel in CL_AssetManager.GetFullCombinedAssetDatabase().levelPrefabs)
             {
                 allLevels.TryAdd(inGameLevel.name, inGameLevel.GetComponent<M_Level>());
                 // allLevels[inGameLevel.name] = inGameLevel.GetComponent<M_Level>();
@@ -566,7 +566,7 @@ public class GameModeController : MonoBehaviour
         
         var contentToCopyFrom =
             GameObject.Find(
-                $"{PlayPane}/Tab Objects/Play Pane - Scroll View Tab - Endless/Viewport/Content")?.transform;
+                $"{PlayPane}/Tab Objects/Play Pane - Scroll View Tab - Endless Variant/Viewport/Content")?.transform;
         
         if (contentToCopyFrom is null)
         {
