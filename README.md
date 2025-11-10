@@ -22,3 +22,6 @@ Alternatively, you can [join our discord server](https://discord.gg/EbHdwEhjgY)
 - [**galfar-coder**](https://github.com/galfar-coder) (`galfar.exe`) — Core implementation
 - [**Nebulaetrix**](https://github.com/Nebulaetrix) --- Help with in-game implementation, idea
 - [**Collin800**](https://github.com/Collin8000) --- Original concept inspiration
+
+# Contributors
+- [**DominikHagowski**](https://github.com/DominikHagowski)
