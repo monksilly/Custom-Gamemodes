@@ -1,40 +1,27 @@
 ﻿using BepInEx;
 using CustomGameModes.Controllers;
 using HarmonyLib;
+using CustomGameModes.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using WKLib.API;
 using UnityEngine.UI;
 using WKLib.Core;
+using WKLib;
 
 namespace CustomGameModes;
 
-public class TextLoading: MonoBehaviour
-{
-    public static GameObject LoadingInstance;
-
-    void Awake()
-    {
-        if (LoadingInstance) return;
-        GameObject canvas = GameObject.Find("Canvas/Loading");
-        if (canvas)
-        {
-            LoadingInstance = Instantiate(canvas);
-            LoadingInstance.name = "LoadingPrefab";
-            LoadingInstance.SetActive(false);
-            LoadingInstance.GetComponent<Image>().color += new Color(0f, 0f, 0f, 0.4f);
-            DontDestroyOnLoad(LoadingInstance);
-        }
-    }
-}
-
 [BepInIncompatibility("com.validaq.loadintolevel")]
-[BepInDependency("com.monksilly.WKLib")]
-[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+[BepInDependency(WKLibPlugin.GUID, BepInDependency.DependencyFlags.HardDependency)]
+[BepInPlugin(GUID, NAME, VERSION)]
 public class Plugin : BaseUnityPlugin
 {
+    public const string GUID = "com.monksilly.CustomGamemodes";
+    public const string NAME = "CustomGamemodes";
+    public const string VERSION = MyPluginInfo.PLUGIN_VERSION;
+    
     public static Plugin Instance;
-    public WKLibAPI Context;
+    public static WKLibAPI LibAPI = WKLibAPI.Create(NAME, GUID, "CustomGamemodes");
     
     public GameObject stuffHolder;
 
@@ -48,7 +35,8 @@ public class Plugin : BaseUnityPlugin
         Instance = this;
         
         // Register to WKLib
-        Context = WKLibAPI.Create(MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_GUID);
+        LibAPI.AddToModList(new ModListTab());
+        LibAPI.AddWindow(WindowDeclarations.MainWin);
         
         // Plugin startup logic
         LogManager.Init(Logger);
@@ -100,5 +88,10 @@ public class Plugin : BaseUnityPlugin
         
         stuffHolder.AddComponent<GameModeController>();
         stuffHolder.AddComponent<TextLoading>();
+    }
+    
+    private void OnDestroy()
+    {
+        LibAPI.Destroy();
     }
 }

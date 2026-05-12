@@ -80,7 +80,7 @@ public class GameModeController : MonoBehaviour
         LogManager.Info("[GameModeController] Awake()");
             
         // Instantiate all helpers / services:
-        _assetService = new AssetService(Plugin.Instance.Context);
+        _assetService = new AssetService(Plugin.LibAPI);
         _capsuleFactory = new CapsuleFactory();
 
         var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -428,9 +428,9 @@ public class GameModeController : MonoBehaviour
                     }
                     LogManager.Debug($"[Gamemode Builder] Loaded {loadedLevels}/{numLevelsToLoad} levels");
 
-                    //_regions.ForEach(reg => reg.subregionGroups.ForEach(subRegGroup =>
-                    //    subRegGroup.subregions.ForEach(subReg => gm.playlistLevels.AddRange(subReg.levels))));
-                    gm.playlistLevelAssets = levels;
+                    regions.ForEach(reg => reg.subregionGroups.ForEach(subRegGroup =>
+                        subRegGroup.subregions.ForEach(subReg => gm.playlistLevelAssets.AddRange(subReg.levelReferences))));
+                    //gm.playlistLevelAssets = levels;
                     break;
             }
 

@@ -5,3 +5,5 @@ deps/*
 .vs
 *.DotSettings.*
 *.DotSettings
+
+CustomGamemodes.csproj.user

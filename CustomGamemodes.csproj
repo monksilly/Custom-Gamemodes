@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>monksilly.CustomGamemodes</AssemblyName>
     <Product>Custom Gamemodes</Product>
-    <Version>0.1.2</Version>
+    <Version>0.2.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -13,6 +13,8 @@
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
     <RootNamespace>CustomGameModes</RootNamespace>
+    <WhiteKnuckleDir>Defined in WK_Lib.csproj.user!!</WhiteKnuckleDir> <!-- Ensure that this has BepInEx installed -->
+    <CopyToBepInExPluginsDir>true</CopyToBepInExPluginsDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,53 +30,58 @@
   
   <ItemGroup>
     <Reference Include="ALINE">
-      <HintPath>deps\ALINE.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/ALINE.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>deps\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>deps\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization">
-      <HintPath>deps\Sirenix.Serialization.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Sirenix.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization.Config">
-      <HintPath>deps\Sirenix.Serialization.Config.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Sirenix.Serialization.Config.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime">
-      <HintPath>deps\System.Runtime.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/System.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.InteropServices">
-      <HintPath>deps\System.Runtime.InteropServices.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/System.Runtime.InteropServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization">
-      <HintPath>deps\System.Runtime.Serialization.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/System.Runtime.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Collections">
-      <HintPath>deps\Unity.Collections.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Collections.dll</HintPath>
     </Reference>
     <Reference Include="Unity.InputSystem">
-      <HintPath>deps\Unity.InputSystem.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.InputSystem.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Mathematics">
-      <HintPath>deps\Unity.Mathematics.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Postprocessing.Runtime">
-      <HintPath>deps\Unity.Postprocessing.Runtime.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Postprocessing.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>deps\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>deps\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="WKLib">
-      <HintPath>deps\WKLib.dll</HintPath>
+      <HintPath>Libs/WKLib.dll</HintPath>
+    </Reference>
+    <Reference Include="ImuiBepInEx">
+      <HintPath>Libs/ImuiBepInEx.dll</HintPath>
     </Reference>
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="CustomGamemodes.csproj.user" />
+  </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y /D &quot;$(TargetPath)&quot; &quot;D:\SteamLibrary\steamapps\common\White Knuckle\BepInEx\plugins\Custom Gamemodes\&quot;" />
-  </Target>
+  <Import Project="Properties/DeployToPlugins.targets" />
 </Project>
