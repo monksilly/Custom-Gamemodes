@@ -1,18 +1,20 @@
 ﻿using BepInEx;
 using CustomGameModes.Controllers;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using WKLib.API;
 using WKLib.Core;
 
 namespace CustomGameModes;
 
 [BepInIncompatibility("com.validaq.loadintolevel")]
-[BepInDependency("WKLib")]
+[BepInDependency("com.monksilly.WKLib")]
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance;
-    public ModContext Context;
+    public WKLibAPI Context;
     
     public GameObject stuffHolder;
 
@@ -26,13 +28,14 @@ public class Plugin : BaseUnityPlugin
         Instance = this;
         
         // Register to WKLib
-        Context = ModRegistry.Register(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_VERSION);
+        Context = WKLibAPI.Create(MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_GUID);
         
         // Plugin startup logic
         LogManager.Init(Logger);
         LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
-        
+
         SceneManager.sceneLoaded += OnSceneLoaded;
+        Harmony.CreateAndPatchAll(typeof(Patches.ModPatches));
     }
 
 

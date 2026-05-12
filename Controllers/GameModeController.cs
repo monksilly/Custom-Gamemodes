@@ -1,35 +1,33 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using System.Threading.Tasks;
 using CustomGameModes.Config;
 using CustomGameModes.Factories;
 using MonoMod.Utils;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using WKLib;
+using WKLib.API.Assets;
+using static M_Gamemode;
 using Random = UnityEngine.Random;
-using WKLib.Assets;
-using WKLib.Gamemodes.Builders;
 
 namespace CustomGameModes.Controllers;
 
 public class GameModeController : MonoBehaviour
 {
     public static GameModeController Instance;
-    public Dictionary<string,int> LastChosenSpriteIndices { get; } = new();
+    public Dictionary<string,int> LastChosenSpriteIndices { get; } = [];
     public string currentScene;
     
-    private AssetService _assetService;
-    private SubRegionBuilder _subregionBuilder;
-    private RegionBuilder _regionBuilder;
-    private GamemodeBuilder _gameModeBuilder;
     private CapsuleFactory _capsuleFactory;
+    private AssetService _assetService;
 
     private const string ConfigFileName = "config.json";
     private readonly Dictionary<ConfigKind, Func<string, JObject, Task>> _configHandlers;
@@ -39,14 +37,14 @@ public class GameModeController : MonoBehaviour
     const string PlayPane = "Canvas - Screens/Screens/Canvas - Screen - Play/Play Menu/Play Pane";
     
     // Loading
-    private readonly Dictionary<string, float> _progressPhases = new();
+    private readonly Dictionary<string, float> _progressPhases = [];
     private int _expectedPhaseCount;
     private Transform _customLoadingGamemodes;
 
     private string _customRoot;
     
     // Categories
-    private readonly Dictionary<string, GameObject> _customCategories = new();
+    private readonly Dictionary<string, GameObject> _customCategories = [];
     
     private enum ConfigKind
     {
@@ -80,9 +78,6 @@ public class GameModeController : MonoBehaviour
             
         // Instantiate all helpers / services:
         _assetService = new AssetService(Plugin.Instance.Context);
-        _subregionBuilder = new SubRegionBuilder();
-        _regionBuilder = new RegionBuilder();
-        _gameModeBuilder = new GamemodeBuilder();
         _capsuleFactory = new CapsuleFactory();
 
         var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -292,11 +287,11 @@ public class GameModeController : MonoBehaviour
             );
 
             // Load bundle && levels if specified
-            Dictionary<string, M_Level> allLevels = new();
+            Dictionary<string, M_Level> allLevels = [];
 
-            foreach (var inGameLevel in CL_AssetManager.GetFullCombinedAssetDatabase().levelPrefabs)
+            foreach (var inGameLevel in CL_AssetManager.GetFullCombinedAssetDatabase().levelAssets)
             {
-                allLevels.TryAdd(inGameLevel.name, inGameLevel.GetComponent<M_Level>());
+                allLevels.TryAdd(inGameLevel.level.name, inGameLevel.level);
                 // allLevels[inGameLevel.name] = inGameLevel.GetComponent<M_Level>();
             }
 
@@ -326,18 +321,118 @@ public class GameModeController : MonoBehaviour
                 UpdateLoadingText(_progressPhases);
             });
 
-            // build gamemode
-            var gm = _gameModeBuilder
-                .WithRegions(regions)
-                .WithName(cfg.gamemodeName)
-                .WithIntroText(cfg.introText)
-                .IsEndless(cfg.isEndless)
-                .HasPerks(cfg.hasPerks)
-                .HasRevives(cfg.hasRevives)
-                .WithCapsuleSprite(capsuleSprite)
-                .WithScreenArt(screenSprite)
-                .WithGameType(cfg.gameType ?? "single")
-                .Build();
+            var gm = ScriptableObject.CreateInstance<M_Gamemode>();
+            gm.allowAchievements = false;
+            gm.allowCheatedScores = false;
+            gm.allowCheats = true;
+            gm.allowLeaderboardScoring = true;
+            gm.steamLeaderboardName = "";
+            gm.allowHeightAchievements = false;
+            gm.baseGamemode = true;
+            gm.modeType = cfg.isEndless
+                ? M_Gamemode.GameType.endlessPlaylist
+                : M_Gamemode.GameType.playlist;
+            gm.capsuleName = cfg.gamemodeName;
+            gm.gamemodeName = cfg.gamemodeName;
+            gm.introText = cfg.introText;
+            gm.isEndless = cfg.isEndless;
+            gm.hasPerks = cfg.hasPerks;
+            gm.hasRevives = cfg.hasRevives;
+            gm.gamemodeScene = "Game-Main";
+            gm.roachBankID = $"custom-{cfg.gamemodeName}";
+            gm.gamemodePanel = Resources.FindObjectsOfTypeAll<UI_GamemodeScreen_Panel>().FirstOrDefault(x => x.name == "Gamemode_Panel_Base");
+            gm.loseScreen = Resources.FindObjectsOfTypeAll<UI_ScoreScreen>().FirstOrDefault(x => x.name == "ScorePanel_Standard_Death");
+            gm.winScreen = Resources.FindObjectsOfTypeAll<UI_ScoreScreen>().FirstOrDefault(x => x.name == "ScorePanel_Standard_Win");
+            gm.modeTags = [""];
+            gm.unlockAchievement = "";
+            //gm.playlistLevels = [];
+            gm.gamemodeModule = new GamemodeModule_Standard
+            {
+                winScoreMultiplier = 1f
+            };
+            gm.startItems = [new M_Gamemode.SpawnItem { itemid = "Item_Hammer" }];
+            gm.name = cfg.gamemodeName;
+            gm.capsuleArt = capsuleSprite;
+            gm.screenArt = screenSprite;
+            gm.regions = regions;
+
+            M_Gamemode.GameType GameType = M_Gamemode.GameType.single;
+            switch(cfg.gameType.ToLower() ?? "single")
+            {
+                case "endless":
+                    GameType = M_Gamemode.GameType.endlessPlaylist;
+                    break;
+                case "standard":
+                    GameType = M_Gamemode.GameType.standard;
+                    break;
+                case "playlist":
+                    GameType = M_Gamemode.GameType.playlist;
+                    break;
+                case "playlist-shuffle":
+                    GameType = M_Gamemode.GameType.shuffledPlaylist;
+                    break;
+                case "single":
+                    GameType = M_Gamemode.GameType.single;
+                    break;
+            }
+
+            var numLevelsToLoad = 0;
+
+            regions.ForEach(reg => reg.subregionGroups.ForEach(subRegGroup =>
+                subRegGroup.subregions.ForEach(subReg => numLevelsToLoad += subReg.levelReferences.Count)));
+
+            LogManager.Debug($"[Gamemode Builder] Will load {numLevelsToLoad} levels for {cfg.gamemodeName}");
+
+            switch (numLevelsToLoad)
+            {
+                case 1:
+                    gm.modeType = M_Gamemode.GameType.single;
+                    gm.playlistLevelAssets = [regions[0].subregionGroups[0].subregions[0].levelReferences[0]];
+                    LogManager.Debug($"[Gamemode Builder] Loading one singular level");
+                    break;
+                case > 1 when GameType == M_Gamemode.GameType.single:
+                    gm.modeType = M_Gamemode.GameType.playlist;
+                    regions.ForEach(reg => reg.subregionGroups.ForEach(subRegGroup =>
+                        subRegGroup.subregions.ForEach(subReg => gm.playlistLevelAssets.AddRange(subReg.levelReferences))));
+                    break;
+                case > 1:
+                    gm.modeType = GameType;
+                    List<M_Level.LevelAssetHolder> levels = [];
+                    var loadedLevels = 0;
+
+                    foreach (var level in from region in regions
+                                          from subRegionGroup in region.subregionGroups
+                                          from subRegion in subRegionGroup.subregions
+                                          from level in subRegion.levelReferences
+                                          select level)
+                    {
+                        try
+                        {
+                            levels.Add(level);
+                            loadedLevels++;
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError(e);
+                            LogManager.Error($"[Gamemode Builder] Failed to load: {e.Message}");
+                        }
+                    }
+                    LogManager.Debug($"[Gamemode Builder] Loaded {loadedLevels}/{numLevelsToLoad} levels");
+
+                    //_regions.ForEach(reg => reg.subregionGroups.ForEach(subRegGroup =>
+                    //    subRegGroup.subregions.ForEach(subReg => gm.playlistLevels.AddRange(subReg.levels))));
+                    gm.playlistLevelAssets = levels;
+                    break;
+            }
+
+            gm.levelsToGenerate = numLevelsToLoad;
+
+            // GameObjects: find “World_Root” in the currently loaded objects
+            var worldRoot = Resources.FindObjectsOfTypeAll<GameObject>()
+                .FirstOrDefault(go => go.name == "World_Root");
+            gm.gamemodeObjects = worldRoot is not null
+                ? [worldRoot]
+                : [];
 
             levelProgress.Report(1f);
             gmProgress.Report(1f);
@@ -428,6 +523,7 @@ public class GameModeController : MonoBehaviour
             });
 
             var gm = await _assetService.LoadGameModeFromBundle(bundle, cfg.gamemodeName, gmProgress);
+            gm.playlistLevelAssets = [.. gm.playlistLevels.Select(M_Level.LevelAssetHolder.GetNewHolderFromLevel)]; // Migrate old to new
 
             List<Sprite> capsuleArtsFinal = null;
 
@@ -455,7 +551,7 @@ public class GameModeController : MonoBehaviour
             }
 
             //ApplyRandomArt(cfg.capsuleArts, assetsFolder, gm, a => gm.capsuleArt = _assetService.LoadPngAsSprite(a));
-            ApplyRandomArt(cfg.screenArts, assetsFolder, gm, a => gm.screenArt = _assetService.LoadPngAsSprite(a));
+            ApplyRandomArt(cfg.screenArts, assetsFolder, a => gm.screenArt = _assetService.LoadPngAsSprite(a));
 
             levelProgress.Report(1f);
             gmProgress.Report(1f);
@@ -485,7 +581,7 @@ public class GameModeController : MonoBehaviour
         return ConfigKind.Unknown;
     }
 
-    private static void ApplyRandomArt(List<string> paths, string baseFolder, M_Gamemode gm, Action<string> apply)
+    private static void ApplyRandomArt(List<string> paths, string baseFolder, Action<string> apply)
     {
         if (paths == null || paths.Count == 0) return;
         
@@ -502,32 +598,73 @@ public class GameModeController : MonoBehaviour
             .Select(src =>
             {
                 var matches = FindMatchingLevels(src, levels);
-                return _subregionBuilder
-                    .WithName(src.subregionName)
-                    .WithLevels(matches)
-                    .Build();
+                var subregion = ScriptableObject.CreateInstance<M_Subregion>();
+                subregion.subregionName = src.subregionName;
+                subregion.name = src.subregionName;
+                subregion.levelReferences = [.. matches.Select((l) => M_Level.LevelAssetHolder.GetNewHolderFromLevel(l))];
+                subregion.subregionHeight = subregion.levelReferences.Sum(lv => lv.level.GetHeight());
+                subregion.sessionEventLists = [.. subregion.levelReferences.SelectMany(lv => lv.level.sessionEventLists)];
+                return subregion;
             })
             .ToList();
-        
-        return _regionBuilder
-            .WithName(rc.regionName)
-            .WithSubregions(subregions)
-            .Build();
+
+        var region = ScriptableObject.CreateInstance<M_Region>();
+        region.regionName = rc.regionName;
+        region.name = rc.regionName;
+
+        List<M_Region.SubregionGroup> subRegGroups = [];
+        foreach (var subregion in subregions)
+        {
+            subRegGroups.Add(new M_Region.SubregionGroup() { subregions = [subregion] });
+        }
+
+        // Wrap the subregions in SubregionGroups
+        region.subregionGroups = subRegGroups;
+
+        if (subregions.Count > 1 && subregions[0].levelReferences.Count > 1)
+        {
+            region.transitionLevels =
+            [
+                new M_Region.TransitionLevels() {
+                    fromRegion = rc.regionName,
+                    levels = [subregions[0].levelReferences[^1].level]
+                }
+            ];
+
+            subregions[0].levelReferences.RemoveAt(subregions[0].levelReferences.Count - 1);
+        }
+
+        region.regionHeight = subregions.Sum(sr => sr.subregionHeight);
+
+
+        // pick a default start level - M1_Intro_01 (if exists)
+        var defaultPrefab = CL_AssetManager.GetFullCombinedAssetDatabase().levelAssets
+            .FirstOrDefault(pref => pref.level.levelName == "M1_Intro_01");
+        var defaultLevelComp = defaultPrefab?.level;
+        if (defaultLevelComp is not null)
+        {
+            region.startLevels = [defaultLevelComp];
+        }
+
+        region.regionOrder = M_Region.RegionOrder.playlist;
+        region.introText = rc.regionName;
+
+        // Flatten all sessionEventLists from subregions
+        region.sessionEventLists = [.. subregions.SelectMany(sr => sr.sessionEventLists)];
+        return region;
     }
 
     private List<M_Level> FindMatchingLevels(SubregionConfig src, Dictionary<string, M_Level> levels)
     {
         if (levels != null && src.levelNameContains != null)
         {
-            return levels
+            return [.. levels
                 .Where(kv =>  kv.Key.IndexOf(src.levelNameContains, StringComparison.OrdinalIgnoreCase) >= 0)
-                .Select(kv => kv.Value).ToList();
+                .Select(kv => kv.Value)];
         }
         if (src.levels != null)
         {
-            return src.levels
-                .SelectMany(lvl => _assetService.FindLevelsByName(lvl))
-                .ToList();
+            return [.. src.levels.SelectMany(_assetService.FindLevelsByName)];
         }
         
         LogManager.Error($"[GamemodeLoader] No matching rule for subregion {src.subregionName}");
