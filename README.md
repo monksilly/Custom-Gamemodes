@@ -4,6 +4,12 @@ This mod allows you to create your own custom gamemodes using a JSON configurati
 
 It supports both in-game levels, and your custom levels, or custom premade gamemodes.
 
+> ### ⚠️ NOTICE ⚠️
+> Mods that were made before abyss update are going to be broken.
+>
+> It is confirmed that any map made after abyss is getting loaded correctly on the anniversary update.
+> One of those maps being **Generator Repair**️
+
 ## Usage
 
 Consult the [Wiki](https://github.com/monksilly/Custom-Gamemodes/wiki) for detailed instructions on JSON syntax, examples, and options.
@@ -25,3 +31,4 @@ Alternatively, you can [join our discord server](https://discord.gg/EbHdwEhjgY)
 
 # Contributors
 - [**DominikHagowski**](https://github.com/DominikHagowski)
+- [**Jimmyl**](https://github.com/mc-oofert)
