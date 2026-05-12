@@ -44,6 +44,9 @@ public class GameModeController : MonoBehaviour
     private string _customRoot;
     
     // Categories
+    private float _lastUpdateHeader;
+    private float _wait;
+
     private readonly Dictionary<string, GameObject> _customCategories = [];
     
     private enum ConfigKind
@@ -135,8 +138,11 @@ public class GameModeController : MonoBehaviour
     private void PrepareLoadingText()
     {
         var container = GameObject.Find("Canvas - Main Menu").transform;
-        var toClone = container.Find("Loading");
+        // var toClone = container.Find("Loading");
+        var toClone = TextLoading.LoadingInstance;
         var customLoading = Instantiate(toClone, container);
+        
+        customLoading.SetActive(true);
         customLoading.name = "Loading Gamemodes";
         var customRect = customLoading.GetComponent<RectTransform>();
         if (customRect)
@@ -148,14 +154,17 @@ public class GameModeController : MonoBehaviour
         var allLoaded = _progressPhases.All(x => x.Value >= 1f) 
                         && _progressPhases.Count == _expectedPhaseCount;
         customLoading.gameObject.SetActive(!allLoaded);
-        _customLoadingGamemodes = customLoading;
+        _customLoadingGamemodes = customLoading.transform;
     }
     
     private void UpdateLoadingText(Dictionary<string, float> progressPhases)
     {
+        if (Time.time - _lastUpdateHeader < _wait) return;
+        _wait = Random.Range(15, 30) / 100f;
+        _lastUpdateHeader = Time.time;
+        
         if (_customLoadingGamemodes is null || currentScene != "Main-Menu") return;
-
-        var text = _customLoadingGamemodes.Find("Settings Title.01").GetComponent<TextMeshProUGUI>();
+        var text = _customLoadingGamemodes.Find("Load Title").GetComponent<TextMeshProUGUI>();
         var sb = new StringBuilder();
         var keys = progressPhases.Keys.ToList();
         for (var i = 0; i < keys.Count; i++)
@@ -166,7 +175,7 @@ public class GameModeController : MonoBehaviour
             
             sb.AppendLine($"({i+1}/{_expectedPhaseCount}) {phase}: {(p * 100f):0}%");
         }
-        text.fontSize = 25;
+        text.fontSize = 35;
         text.text = sb.ToString();
 
         var allLoaded = progressPhases.All(x => x.Value >= 1f) 
