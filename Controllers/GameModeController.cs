@@ -159,7 +159,6 @@ public class GameModeController : MonoBehaviour
     
     private void UpdateLoadingText(Dictionary<string, float> progressPhases)
     {
-        if (Time.time - _lastUpdateHeader < _wait) return;
         _wait = Random.Range(15, 30) / 100f;
         _lastUpdateHeader = Time.time;
         
@@ -354,6 +353,8 @@ public class GameModeController : MonoBehaviour
             gm.winScreen = Resources.FindObjectsOfTypeAll<UI_ScoreScreen>().FirstOrDefault(x => x.name == "ScorePanel_Standard_Win");
             gm.modeTags = [""];
             gm.unlockAchievement = "";
+            gm.gamemodeSettings = [];
+            gm.playlistLevelAssets = [];
             //gm.playlistLevels = [];
             gm.gamemodeModule = new GamemodeModule_Standard
             {
@@ -366,7 +367,7 @@ public class GameModeController : MonoBehaviour
             gm.regions = regions;
 
             M_Gamemode.GameType GameType = M_Gamemode.GameType.single;
-            switch(cfg.gameType.ToLower() ?? "single")
+            switch((cfg.gameType ?? "single").ToLower())
             {
                 case "endless":
                     GameType = M_Gamemode.GameType.endlessPlaylist;
