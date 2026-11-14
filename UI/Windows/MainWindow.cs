@@ -9,7 +9,7 @@ public class MainWindow : WKLibWindow
 {
     public bool TestBool = false;
     public float TestValue = 20f;
-    public KeyBind TestKeybind = new(KeyCode.P);
+    public KeyCode TestKeybind = KeyCode.P;
     
     public MainWindow()
     {
@@ -37,7 +37,7 @@ public class MainWindow : WKLibWindow
             gui.NumericEdit(ref TestValue, min: 0f, max: float.MaxValue, format: "0.0", flags: ImNumericEditFlag.Slider);
         }
         
-        gui.SimpleKeybind("Reload Gamemodes", ref TestKeybind);
+        gui.Keybind("Reload Gamemodes", ref TestKeybind);
         
         gui.EndWindow();
     }
