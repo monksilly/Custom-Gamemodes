@@ -159,7 +159,6 @@ public class GameModeController : MonoBehaviour
     
     private void UpdateLoadingText(Dictionary<string, float> progressPhases)
     {
-        if (Time.time - _lastUpdateHeader < _wait) return;
         _wait = Random.Range(15, 30) / 100f;
         _lastUpdateHeader = Time.time;
         
